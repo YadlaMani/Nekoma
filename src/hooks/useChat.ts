@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTransferWithPermissions } from './useTransferWithPermissions';
+import { useSwapWithPermissions } from './useSwapWithPermissions';
 
 export interface ChatMessage {
   id: string;
@@ -26,7 +27,8 @@ export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { executeTransfer, isExecuting } = useTransferWithPermissions();
+  const { executeTransfer, isExecuting: isTransferExecuting } = useTransferWithPermissions();
+  const { executeSwap, isExecuting: isSwapExecuting } = useSwapWithPermissions();
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
@@ -68,33 +70,53 @@ export function useChat(): UseChatReturn {
       const data = await response.json();
       
       console.log('Chat API response:', JSON.stringify(data, null, 2));
+      console.log('executeClientSide?', data.executeClientSide);
+      console.log('transactionParams?', data.transactionParams);
+      console.log('swapType?', data.swapType);
 
       // Check if client-side execution is required
       if (data.executeClientSide && data.transactionParams) {
-        console.log('Client-side execution detected!', data.transactionParams);
+        console.log('✅ Client-side execution detected!', data.transactionParams);
         
-        // Add a message indicating transfer is starting
+        // Add a message indicating operation is starting
         const preparingMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: data.response + "\n\nExecuting transfer (with retry logic)...",
+          content: data.response + `\n\nExecuting ${data.swapType ? 'swap' : 'transfer'} (with retry logic)...`,
           timestamp: new Date(),
           ...(data.toolUsed && { toolUsed: data.toolUsed }),
         };
         
         setMessages(prev => [...prev, preparingMessage]);
 
-        console.log('🚀 Starting client-side transfer execution...');
+        console.log(`🚀 Starting client-side ${data.swapType ? 'swap' : 'transfer'} execution...`);
         
-        // Execute the transfer client-side
-        const transferResult = await executeTransfer(data.transactionParams);
-        
-        console.log('📋 Transfer result:', transferResult);
+        let operationResult;
+        try {
+          if (data.swapType) {
+            console.log('📊 Executing SWAP with params:', data.transactionParams);
+            // Execute the swap client-side
+            operationResult = await executeSwap(data.transactionParams);
+          } else {
+            console.log('💸 Executing TRANSFER with params:', data.transactionParams);
+            // Execute the transfer client-side
+            operationResult = await executeTransfer(data.transactionParams);
+          }
+          
+          console.log('📋 Operation result:', operationResult);
+        } catch (executionError) {
+          console.error('❌ Client-side execution failed:', executionError);
+          operationResult = {
+            success: false,
+            message: `Execution failed: ${executionError instanceof Error ? executionError.message : 'Unknown error'}`,
+            error: executionError instanceof Error ? executionError.message : 'Unknown error'
+          };
+        }
         
         // Create the final result message based on success/failure
-        let resultContent = transferResult.message;
-        if (transferResult.success && transferResult.explorerUrl) {
-          resultContent += `\n\nView transaction: ${transferResult.explorerUrl}`;
+        let resultContent = operationResult.message;
+        if (operationResult.success && operationResult.explorerUrl) {
+          resultContent += `\n\nView transaction: ${operationResult.explorerUrl}`;
         }
         
         const resultMessage: ChatMessage = {
@@ -103,14 +125,20 @@ export function useChat(): UseChatReturn {
           content: resultContent,
           timestamp: new Date(),
           toolUsed: {
-            name: 'sendUSDCTransaction',
-            result: transferResult
+            name: data.swapType ? 'swapUSDCForToken' : 'sendUSDCTransaction',
+            result: operationResult
           }
         };
 
         setMessages(prev => [...prev, resultMessage]);
       } else {
         console.log('📝 Regular message response, no client-side execution needed');
+        console.log('🔍 Response data check:', {
+          hasExecuteClientSide: !!data.executeClientSide,
+          hasTransactionParams: !!data.transactionParams,
+          swapType: data.swapType,
+          toolUsed: data.toolUsed?.name
+        });
         
         // Regular message handling
         const assistantMessage: ChatMessage = {
@@ -139,7 +167,7 @@ export function useChat(): UseChatReturn {
 
   return {
     messages,
-    isLoading: isLoading || isExecuting,
+    isLoading: isLoading || isTransferExecuting || isSwapExecuting,
     error,
     sendMessage,
     clearChat,
