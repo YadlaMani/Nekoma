@@ -18,16 +18,16 @@ export function ChatMessageComponent({ message }: ChatMessageComponentProps) {
     >
       <div
         className={cn(
-          'max-w-[80%] rounded-lg px-4 py-2 break-words',
+          'max-w-[80%] rounded-lg px-4 py-2 break-words backdrop-blur-sm border shadow-lg',
           isUser
-            ? 'bg-primary text-primary-foreground ml-auto'
-            : 'bg-muted text-muted-foreground mr-auto'
+            ? 'bg-gradient-to-br from-blue-600/80 via-blue-700/80 to-blue-800/80 text-white border-blue-400/30 ml-auto shadow-blue-500/20'
+            : 'bg-white/10 text-gray-200 border-white/20 mr-auto shadow-black/20'
         )}
       >
         {message.toolUsed && (
           <div className={cn(
             "flex items-center gap-2 mb-2 text-xs opacity-70",
-            message.toolUsed.error ? "text-destructive" : ""
+            message.toolUsed.error ? "text-red-400" : "text-yellow-400"
           )}>
             <Wrench className="h-3 w-3" />
             <span>

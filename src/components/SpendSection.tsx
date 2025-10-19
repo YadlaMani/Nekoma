@@ -131,20 +131,21 @@ const SpendSection = () => {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto mt-6">
+    <Card className="w-full max-w-3xl mx-auto mt-6 bg-white/5 backdrop-blur-sm border-white/10">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-white">
           <span>Spend Permissions (USDC Only)</span>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchUserPermissions}
             disabled={fetchingPermissions || !userAddress || !spenderAddress}
+            className="relative overflow-hidden bg-gradient-to-br from-gray-600/20 via-gray-700/20 to-gray-800/20 hover:from-gray-500/30 hover:via-gray-600/30 hover:to-gray-700/30 border-gray-400/30 text-gray-300 hover:text-gray-200 font-medium shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-gray-500/20 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
           >
             {fetchingPermissions ? "Refreshing..." : "Refresh"}
           </Button>
         </CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-300">
           Grant or revoke spend permissions to allow the agent to purchase
           tokens on your behalf.
         </p>
@@ -152,19 +153,21 @@ const SpendSection = () => {
       <CardContent>
         <div className="flex gap-4 mb-4">
           <div className="flex-1">
-            <Label>Daily Limit (USDC)</Label>
+            <Label className="text-white">Daily Limit (USDC)</Label>
             <Input
               type="number"
               min={0}
               step={0.1}
               value={dailyLimit}
               onChange={(e: any) => setDailyLimit(Number(e.target.value))}
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
             />
           </div>
           <div className="flex items-end gap-2">
             <Button
               onClick={handleAllocate}
               disabled={loading || !userAddress || !spenderAddress}
+              className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 hover:from-blue-400 hover:via-blue-500 hover:to-blue-600 text-white font-semibold shadow-2xl border border-blue-400/30 transition-all duration-300 hover:shadow-blue-500/25 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
             >
               {loading ? "Allocating..." : "Grant Permission"}
             </Button>
@@ -172,59 +175,59 @@ const SpendSection = () => {
         </div>
 
         {!userAddress || !spenderAddress ? (
-          <div className="text-center py-4 text-gray-500">
+          <div className="text-center py-4 text-gray-400">
             Loading wallet addresses...
           </div>
         ) : (
           <>
-            <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
-              <p>
-                <strong>User Address:</strong> {userAddress}
+            <div className="mb-4 p-3 bg-white/10 rounded text-sm border border-white/10">
+              <p className="text-gray-300">
+                <strong className="text-white">User Address:</strong> {userAddress}
               </p>
-              <p>
-                <strong>Spender Address:</strong> {spenderAddress}
+              <p className="text-gray-300">
+                <strong className="text-white">Spender Address:</strong> {spenderAddress}
               </p>
             </div>
 
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Token</TableHead>
-                  <TableHead>Daily Allowance</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                <TableRow className="border-white/10">
+                  <TableHead className="text-gray-300">Token</TableHead>
+                  <TableHead className="text-gray-300">Daily Allowance</TableHead>
+                  <TableHead className="text-gray-300">Account</TableHead>
+                  <TableHead className="text-gray-300">Status</TableHead>
+                  <TableHead className="text-gray-300">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {fetchingPermissions ? (
-                  <TableRow>
+                  <TableRow className="border-white/10">
                     <TableCell
                       colSpan={5}
-                      className="text-center text-gray-500"
+                      className="text-center text-gray-400"
                     >
                       Loading permissions...
                     </TableCell>
                   </TableRow>
                 ) : permissions.length === 0 ? (
-                  <TableRow>
+                  <TableRow className="border-white/10">
                     <TableCell
                       colSpan={5}
-                      className="text-center text-gray-500"
+                      className="text-center text-gray-400"
                     >
                       No spend permissions granted yet
                     </TableCell>
                   </TableRow>
                 ) : (
                   [...permissions].reverse().map((p, index) => (
-                    <TableRow key={`${p.token}-${index}`}>
-                      <TableCell className="font-medium">USDC</TableCell>
-                      <TableCell>{formatAllowance(p.allowance)}</TableCell>
-                      <TableCell className="text-xs text-gray-500">
+                    <TableRow key={`${p.token}-${index}`} className="border-white/10">
+                      <TableCell className="font-medium text-white">USDC</TableCell>
+                      <TableCell className="text-gray-300">{formatAllowance(p.allowance)}</TableCell>
+                      <TableCell className="text-xs text-gray-400">
                         {p.account.slice(0, 6)}...{p.account.slice(-4)}
                       </TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
                           {p.status === "Active"
                             ? "Active"
                             : p.status === "Expired"
@@ -233,7 +236,7 @@ const SpendSection = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="bg-red-600/80 hover:bg-red-600">
                           Revoke
                         </Button>
                       </TableCell>
@@ -245,7 +248,7 @@ const SpendSection = () => {
           </>
         )}
 
-        <div className="mt-4 text-xs text-gray-500">
+        <div className="mt-4 text-xs text-gray-400">
           <p>
             Spend permissions are fetched directly from the blockchain and allow
             the agent to spend the specified amount per day. You can revoke them

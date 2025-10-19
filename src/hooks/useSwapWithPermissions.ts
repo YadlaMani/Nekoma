@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from 'react';
 import { getRawPermissions } from '@/utils/spendUtils';
 import { getPermissionStatus } from '@base-org/account/spend-permission/browser';
@@ -20,7 +19,7 @@ interface SwapResult {
   error?: string;
   transactionHash?: string;
   explorerUrl?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export const useSwapWithPermissions = () => {
@@ -44,7 +43,6 @@ export const useSwapWithPermissions = () => {
             userAddress 
           });
 
-          // Get raw permissions from blockchain
           const rawPermissions = await getRawPermissions(userAddress, smartAccountAddress);
 
           if (!rawPermissions || rawPermissions.length === 0) {
@@ -57,9 +55,8 @@ export const useSwapWithPermissions = () => {
 
           const requiredAmount = BigInt(amount);
           let remainingAmount = requiredAmount;
-          const spendCalls: any[] = [];
+          const spendCalls: unknown[] = [];
 
-          // Prepare spend calls using available permissions
           for (const perm of rawPermissions) {
             if (remainingAmount <= 0) break;
 
@@ -87,7 +84,6 @@ export const useSwapWithPermissions = () => {
 
           console.log(`Executing ${spendCalls.length} spend calls for swap (attempt ${attempt})...`);
 
-          // Execute swap using the swap endpoint
           const response = await axios.post('/api/swap', {
             tokenAddress,
             sender: userAddress,
@@ -114,19 +110,16 @@ export const useSwapWithPermissions = () => {
           lastError = error instanceof Error ? error : new Error('Unknown error');
           console.error(`Swap attempt ${attempt}/${maxRetries} failed:`, lastError.message);
           
-          // If this is the last attempt, don't retry
           if (attempt === maxRetries) {
             break;
           }
           
-          // Wait before retrying (exponential backoff: 1s, 2s, 4s, 8s)
           const waitTime = Math.pow(2, attempt - 1) * 1000;
           console.log(`Waiting ${waitTime}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
 
-      // All attempts failed
       return {
         success: false,
         message: `Swap failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`,

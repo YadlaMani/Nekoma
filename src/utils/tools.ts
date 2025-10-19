@@ -50,8 +50,6 @@ export const availableTools: Tool[] = [
     }
   },
   {
-<<<<<<< HEAD
-=======
     name: "swapUSDCForToken",
     description: "Swap USDC for another token on the Base network. Use this tool when users want to exchange, swap, or buy tokens with USDC. This tool integrates with the user's spend permissions system and will trigger client-side execution for proper permission handling. You can provide either a token address OR a token symbol (like 'ETH', 'WETH', 'DAI') - the tool will automatically resolve symbols to addresses.",
     parameters: {
@@ -109,7 +107,6 @@ export const availableTools: Tool[] = [
     }
   },
   {
->>>>>>> 566170b3f54fe944277f9d799676e3d65329b03e
     name: "convertUSDToUSDC",
     description: "Convert USD amount to USDC token units (6 decimals). Use this when you need to calculate USDC amounts for transactions.",
     parameters: {
@@ -193,8 +190,6 @@ export async function executeTools(toolCall: { toolname: string; parameters?: Re
         console.log('Executing sendUSDCTransaction...');
         return await sendUSDCTransaction(parameters as unknown as SendUSDCParams);
         
-<<<<<<< HEAD
-=======
       case 'swapUSDCForToken':
         console.log('Executing swapUSDCForToken...');
         return await swapUSDCForToken(parameters as unknown as SwapUSDCParams);
@@ -207,7 +202,6 @@ export async function executeTools(toolCall: { toolname: string; parameters?: Re
         console.log('Executing getMinimumSwapAmounts...');
         return await getMinimumSwapAmounts(parameters as { tokenSymbol?: string });
         
->>>>>>> 566170b3f54fe944277f9d799676e3d65329b03e
       case 'convertUSDToUSDC':
         console.log('Executing convertUSDToUSDC...');
         return await convertUSDToUSDC(parameters as { usdAmount: number });
@@ -243,8 +237,6 @@ interface SendUSDCParams {
   permission?: FullSpendPermission; // Optional: specific permission to use
 }
 
-<<<<<<< HEAD
-=======
 interface SwapUSDCParams {
   tokenAddress?: string;
   amount: string;
@@ -253,7 +245,6 @@ interface SwapUSDCParams {
   userAddress?: string; // Optional: can be provided for authenticated operations
 }
 
->>>>>>> 566170b3f54fe944277f9d799676e3d65329b03e
 async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   console.log('sendUSDCTransaction called with params:', JSON.stringify(params, null, 2));
   
@@ -329,17 +320,13 @@ async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   }
 }
 
-<<<<<<< HEAD
-function convertUSDToUSDC(params: { usdAmount: number }): unknown {
-  try {
-    const { usdAmount } = params;
-    
-=======
 async function swapUSDCForToken(params: SwapUSDCParams): Promise<unknown> {
   console.log('swapUSDCForToken called with params:', JSON.stringify(params, null, 2));
   
   try {
-    let { tokenAddress, amount, amountUSD, tokenSymbol, userAddress } = params;
+    let { tokenAddress } = params;
+    const { amount, amountUSD, userAddress } = params;
+    let { tokenSymbol } = params;
 
     console.log('Validating and resolving parameters...');
 
@@ -654,7 +641,6 @@ function convertUSDToUSDC(params: { usdAmount: number }): unknown {
   try {
     const { usdAmount } = params;
     
->>>>>>> 566170b3f54fe944277f9d799676e3d65329b03e
     if (usdAmount <= 0) {
       throw new Error('USD amount must be greater than 0');
     }
