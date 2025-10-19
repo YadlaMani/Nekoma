@@ -1,7 +1,7 @@
 import {
   fetchPermissions,
-  requestSpendPermission,
 } from "@base-org/account/spend-permission";
+import { requestSpendPermission } from "@base-org/account/spend-permission/browser";
 
 import { createBaseAccountSDK } from "@base-org/account";
 
@@ -13,6 +13,20 @@ export interface SpendPermissionSummary {
   spender: string;
   createdAt?: number;
   status?: string;
+}
+
+export interface FullSpendPermission {
+  account: string;
+  spender: string;
+  token: string;
+  chainId: number;
+  allowance: bigint;
+  periodInDays: number;
+  signature?: string;
+  permissionHash?: string;
+  start?: number;
+  end?: number;
+  rawPermission?: unknown; // Store the raw permission object from the SDK
 }
 
 const CHAIN_ID = 8453;
@@ -33,7 +47,7 @@ export async function allocateSpendPermission(
     const allowance = BigInt(Math.floor(dailyLimit * 10 ** USDC.decimals));
     const sdk = createBaseAccountSDK({ appName: "Coinbase Agent" });
 
-    const permission = await requestSpendPermission({
+    await requestSpendPermission({
       account: userAccount as `0x${string}`,
       spender: spenderAccount as `0x${string}`,
       token: USDC.address as `0x${string}`,
@@ -116,4 +130,45 @@ export function getRawPermissions(userAccount: string, spenderAccount: string) {
     provider: createBaseAccountSDK({ appName: "Coinbase Agent" }).getProvider(),
   });
   return permissions;
+}
+
+export async function getFullUserSpendPermissions(
+  userAccount: string,
+  spenderAccount: string
+): Promise<FullSpendPermission[]> {
+  try {
+    const sdk = createBaseAccountSDK({ appName: "Coinbase Agent" });
+    const permissions = await fetchPermissions({
+      account: userAccount as `0x${string}`,
+      chainId: CHAIN_ID,
+      spender: spenderAccount as `0x${string}`,
+      provider: sdk.getProvider(),
+    });
+
+    if (!permissions || permissions.length === 0) return [];
+
+    const filtered = permissions.filter(
+      (p) => p.permission?.token?.toLowerCase() === USDC.address.toLowerCase()
+    );
+
+    const mapped = filtered.map((p) => ({
+      account: p.permission?.account || userAccount,
+      spender: p.permission?.spender || spenderAccount,
+      token: USDC.address,
+      chainId: CHAIN_ID,
+      allowance: BigInt(p.permission?.allowance?.toString() || "0"),
+      periodInDays: 1, // Default to daily
+      signature: p.signature,
+      permissionHash: p.permissionHash,
+      start: p.permission?.start,
+      end: p.permission?.end,
+      rawPermission: p, // Store the complete raw permission object
+    }));
+
+    // Sort by creation time ascending
+    return mapped.sort((a, b) => (a.start || 0) - (b.start || 0));
+  } catch (error) {
+    console.error("Failed to fetch full spend permissions:", error);
+    return [];
+  }
 }

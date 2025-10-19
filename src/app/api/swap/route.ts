@@ -9,7 +9,7 @@ const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 // Permit2 contract
 const PERMIT2_ADDRESS = "0x000000000022d473030f116ddee9f6b43ac78ba3";
 
-export const publicClient = createPublicClient({
+const publicClient = createPublicClient({
   chain: base,
   transport: http(),
 });

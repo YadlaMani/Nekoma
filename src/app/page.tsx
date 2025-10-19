@@ -5,10 +5,14 @@ import axios from "axios";
 import { SignInWithBaseButton } from "@/components/SignInWithBase";
 import SpendSection from "@/components/SpendSection";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useChat } from "@/hooks/useChat";
+import { ChatMessages } from "@/components/ChatMessages";
+import { ChatInput } from "@/components/ChatInput";
+import { Trash2, Bot, Wallet } from "lucide-react";
 import { getRawPermissions } from "@/utils/spendUtils";
 import { getPermissionStatus } from "@base-org/account/spend-permission/browser";
-
 import { prepareSpendCallData } from "@base-org/account/spend-permission/browser";
 interface ServerWalletResponse {
   address: string;
@@ -18,6 +22,9 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userAddress, setUserAddress] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Chat functionality
+  const { messages, isLoading: isChatLoading, error: chatError, sendMessage, clearChat } = useChat();
 
   useEffect(() => {
     checkAuthStatus();
@@ -199,7 +206,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!isAuthenticated ? (
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -214,19 +221,70 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              You are signed in
-            </h2>
-            <p className="text-gray-600">Address: {userAddress}</p>
-            <div>
-              <SpendSection />
-            </div>
-            <div>
-              <Button onClick={sendTransaction}>Send Transaction</Button>
-            </div>
-            <div>
-              <Button onClick={swapTokens}>Swap Tokens</Button>
+          <div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Wallet Section */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Wallet className="h-5 w-5" />
+                      Wallet & Transactions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <SpendSection />
+                    <div className="pt-4 border-t space-y-4">
+                      <p className="text-sm text-gray-600 text-center">
+                        💬 Use the chat assistant to send USDC transactions with natural language commands like &quot;send 0.1 USDC to 0x...&quot;
+                      </p>
+                      <div className="flex gap-2 justify-center">
+                        <Button onClick={sendTransaction} variant="outline" size="sm">
+                          Send Transaction
+                        </Button>
+                        <Button onClick={swapTokens} variant="outline" size="sm">
+                          Swap Tokens
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Chat Section */}
+              <div>
+                <Card className="h-[700px] flex flex-col overflow-hidden">
+                  <CardHeader className="border-b flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bot className="h-6 w-6 text-primary" />
+                        <CardTitle>Gemini Chat Assistant</CardTitle>
+                      </div>
+                      {messages.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearChat}
+                          className="flex items-center gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Clear Chat
+                        </Button>
+                      )}
+                    </div>
+                    {chatError && (
+                      <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md break-words">
+                        Error: {chatError}
+                      </div>
+                    )}
+                  </CardHeader>
+                  
+                  <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
+                    <ChatMessages messages={messages} isLoading={isChatLoading} />
+                    <ChatInput onSendMessage={sendMessage} disabled={isChatLoading} />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         )}
