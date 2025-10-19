@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       isAuthenticated: true,
       address: payload.address,
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({
       isAuthenticated: false,
       error: "Invalid session",

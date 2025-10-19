@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  requestRevoke,
   requestSpendPermission,
-} from "@base-org/account/spend-permission";
-import { fetchPermissions } from "@base-org/account/spend-permission";
+} from "@base-org/account/spend-permission/browser";
 import { createBaseAccountSDK } from "@base-org/account";
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
@@ -55,12 +53,12 @@ const SpendSection = () => {
       if (data.smartAccountAddress) {
         setSpenderAddress(data.smartAccountAddress);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch server wallet");
     }
   };
 
-  const fetchUserPermissions = async () => {
+  const fetchUserPermissions = useCallback(async () => {
     if (!userAddress || !spenderAddress) return;
     setFetchingPermissions(true);
     try {
@@ -69,12 +67,12 @@ const SpendSection = () => {
         spenderAddress
       );
       setPermissions(fetchedPermissions);
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch permissions");
     } finally {
       setFetchingPermissions(false);
     }
-  };
+  }, [userAddress, spenderAddress]);
 
   useEffect(() => {
     fetchServerWallet();
@@ -84,7 +82,7 @@ const SpendSection = () => {
     if (userAddress && spenderAddress) {
       fetchUserPermissions();
     }
-  }, [userAddress, spenderAddress]);
+  }, [userAddress, spenderAddress, fetchUserPermissions]);
 
   const formatAllowance = (allowance: string): string => {
     try {
@@ -129,40 +127,6 @@ const SpendSection = () => {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRevoke = async (permission: SpendPermissionSummary) => {
-    try {
-      const rawPermissions = await fetchPermissions({
-        account: userAddress as `0x${string}`,
-        chainId: 8453,
-        spender: spenderAddress as `0x${string}`,
-        provider: createBaseAccountSDK({
-          appName: "Coinbase Agent",
-        }).getProvider(),
-      });
-      for (const perm of rawPermissions) {
-        if (perm.createdAt == permission.createdAt) {
-          await requestRevoke({
-            permission: perm,
-            provider: createBaseAccountSDK({
-              appName: "Coinbase Agent",
-            }).getProvider(),
-          });
-        }
-      }
-      permissions.map((p) => {
-        if (p.createdAt == permission.createdAt) {
-          p.status = "Revoked";
-        }
-        return p;
-      });
-      fetchUserPermissions();
-      toast.success("Permission revoked");
-    } catch (err) {
-      console.error("Revoke error:", err);
-      toast.error("Failed to revoke permission");
     }
   };
 
