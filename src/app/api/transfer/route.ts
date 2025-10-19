@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerWalletForUser, getCdpClient } from "@/utils/cdp";
 import { encodeFunctionData, createPublicClient, http } from "viem";
@@ -17,7 +16,6 @@ const erc20Abi = [
   },
 ];
 
-// USDC contract address on Base
 const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 const publicClient = createPublicClient({
@@ -67,18 +65,16 @@ export async function POST(req: NextRequest) {
 
     const cdpClient = getCdpClient();
 
-    // Step 1: Execute all spend calls to pull USDC from user account to smart wallet
     console.log(`Executing ${spendCalls.length} spend calls to pull funds...`);
     console.log("Raw spend calls:", JSON.stringify(spendCalls, null, 2));
 
-    // Validate and format spend calls
-    const pullCalls = spendCalls.map((spendCall: any, index: number) => {
-      const spendValue = spendCall[0];
+    const pullCalls = spendCalls.map((spendCall: unknown, index: number) => {
+      const spendValue = (spendCall as unknown[])[0] as { to: string; data: string; value?: string };
       if (!spendValue.to) {
         throw new Error(`Spend call at index ${index} is missing 'to' field`);
       }
 
-      const call: any = {
+      const call: { to: `0x${string}`; data: `0x${string}`; value?: bigint } = {
         to: spendValue.to as `0x${string}`,
         data: spendValue.data as `0x${string}`,
       };
@@ -101,11 +97,9 @@ export async function POST(req: NextRequest) {
 
     console.log("Funds pulled into smart wallet:", pullResult.userOpHash);
 
-    // Wait for the transaction to be confirmed and check balance
     console.log("Waiting for transaction confirmation...");
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    await new Promise(resolve => setTimeout(resolve, 5000)); 
 
-    // Check smart wallet USDC balance before transferring
     try {
       const balance = await publicClient.readContract({
         address: USDC_ADDRESS as `0x${string}`,
@@ -133,10 +127,8 @@ export async function POST(req: NextRequest) {
       throw new Error(`Failed to verify smart wallet balance: ${balanceError}`);
     }
 
-    // Step 2: Transfer USDC from smart wallet to recipient
-    const transferCalls: any[] = [];
+    const transferCalls: { to: `0x${string}`; data: `0x${string}` }[] = [];
 
-    // ERC20 transfer (USDC)
     const transferData = encodeFunctionData({
       abi: erc20Abi,
       functionName: "transfer",

@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerWalletForUser, getCdpClient } from "@/utils/cdp";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 
-// USDC contract address on Base
 const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-// Permit2 contract
 const PERMIT2_ADDRESS = "0x000000000022d473030f116ddee9f6b43ac78ba3";
 
 const publicClient = createPublicClient({
@@ -47,12 +44,12 @@ export async function POST(req: NextRequest) {
     console.log(`Executing ${spendCalls.length} spend calls to pull funds...`);
 
     // Pull funds via spend calls
-    const pullCalls = spendCalls.map((spendCall: any, index: number) => {
-      const spendValue = spendCall[0];
+    const pullCalls = spendCalls.map((spendCall: unknown, index: number) => {
+      const spendValue = (spendCall as unknown[])[0] as { to: string; data: string; value?: string };
       if (!spendValue.to) {
         throw new Error(`Spend call at index ${index} is missing 'to' field`);
       }
-      const call: any = {
+      const call: { to: `0x${string}`; data: `0x${string}`; value?: bigint } = {
         to: spendValue.to as `0x${string}`,
         data: spendValue.data as `0x${string}`,
       };
@@ -71,7 +68,6 @@ export async function POST(req: NextRequest) {
 
     console.log("Funds pulled into smart wallet:", pullResult.userOpHash);
 
-    //Approve Permit2 for USDC
     console.log("Approving Permit2 contract for USDC...");
     const approveSelector = "0x095ea7b3";
     const spenderAddress = PERMIT2_ADDRESS.slice(2).padStart(64, "0");
@@ -92,7 +88,6 @@ export async function POST(req: NextRequest) {
 
     await new Promise((res) => setTimeout(res, 3000));
 
-    //Swap USDC → token
     console.log(`Swapping ${amt} USDC for token ${tokenAddress}`);
     const swapResult = await serverWallet.smartAccount.swap({
       network: "base",
@@ -113,7 +108,6 @@ export async function POST(req: NextRequest) {
 
     const tradeTxHash = receipt.transactionHash;
 
-    //Transfer swapped tokens to sender
     console.log("Transferring swapped tokens to sender...");
     const tokenBalance = await publicClient.readContract({
       address: tokenAddress as `0x${string}`,

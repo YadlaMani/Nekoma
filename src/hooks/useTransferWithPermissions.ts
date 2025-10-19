@@ -38,7 +38,6 @@ export const useTransferWithPermissions = () => {
 
           console.log(`Transfer attempt ${attempt}/${maxRetries}:`, { recipient, amountUSD, userAddress });
 
-          // Get raw permissions from blockchain
           const rawPermissions = await getRawPermissions(userAddress, smartAccountAddress);
 
           if (!rawPermissions || rawPermissions.length === 0) {
@@ -53,7 +52,6 @@ export const useTransferWithPermissions = () => {
           let remainingAmount = requiredAmount;
           const spendCalls: any[] = [];
 
-          // Prepare spend calls using available permissions
           for (const perm of rawPermissions) {
             if (remainingAmount <= 0) break;
 
@@ -81,7 +79,6 @@ export const useTransferWithPermissions = () => {
 
           console.log(`Executing ${spendCalls.length} spend calls (attempt ${attempt})...`);
 
-          // Execute transfer using the regular transfer endpoint
           const response = await axios.post('/api/transfer', {
             recipient,
             sender: userAddress,
@@ -106,19 +103,16 @@ export const useTransferWithPermissions = () => {
           lastError = error instanceof Error ? error : new Error('Unknown error');
           console.error(`Transfer attempt ${attempt}/${maxRetries} failed:`, lastError.message);
           
-          // If this is the last attempt, don't retry
           if (attempt === maxRetries) {
             break;
           }
           
-          // Wait before retrying (exponential backoff: 1s, 2s, 4s, 8s)
           const waitTime = Math.pow(2, attempt - 1) * 1000;
           console.log(`Waiting ${waitTime}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
 
-      // All attempts failed
       return {
         success: false,
         message: `Transfer failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`,

@@ -50,6 +50,66 @@ export const availableTools: Tool[] = [
     }
   },
   {
+<<<<<<< HEAD
+=======
+    name: "swapUSDCForToken",
+    description: "Swap USDC for another token on the Base network. Use this tool when users want to exchange, swap, or buy tokens with USDC. This tool integrates with the user's spend permissions system and will trigger client-side execution for proper permission handling. You can provide either a token address OR a token symbol (like 'ETH', 'WETH', 'DAI') - the tool will automatically resolve symbols to addresses.",
+    parameters: {
+      type: "object",
+      properties: {
+        tokenAddress: {
+          type: "string",
+          description: "The contract address of the token to buy/swap to (must be a valid Ethereum address starting with 0x). Optional if tokenSymbol is provided."
+        },
+        tokenSymbol: {
+          type: "string",
+          description: "The symbol of the token to buy/swap to (e.g., 'ETH', 'WETH', 'DAI', 'UNI'). Optional if tokenAddress is provided."
+        },
+        amount: {
+          type: "string", 
+          description: "Amount of USDC to spend in smallest units (6 decimals). For example, '1000000' = 1 USDC, '500000' = 0.5 USDC"
+        },
+        amountUSD: {
+          type: "number",
+          description: "Amount in USD for user-friendly display (e.g., 1.5 for $1.50)"
+        },
+        userAddress: {
+          type: "string",
+          description: "The user's wallet address (automatically populated from session if not provided)"
+        }
+      },
+      required: ["amount", "amountUSD"]
+    }
+  },
+  {
+    name: "getMinimumSwapAmounts",
+    description: "Get minimum swap amounts and trading information for supported tokens on Base network. Use this when users ask about minimum amounts, trading limits, or swap requirements.",
+    parameters: {
+      type: "object",
+      properties: {
+        tokenSymbol: {
+          type: "string",
+          description: "Optional: Specific token symbol to get info for (e.g., 'ETH', 'DAI'). If not provided, returns info for all supported tokens."
+        }
+      }
+    }
+  },
+  {
+    name: "getTokenAddress",
+    description: "Get the contract address for popular tokens on Base network. Use this when users mention token symbols like ETH, WETH, DAI, etc., but don't provide the contract address.",
+    parameters: {
+      type: "object",
+      properties: {
+        tokenSymbol: {
+          type: "string",
+          description: "Token symbol (e.g., 'ETH', 'WETH', 'DAI', 'COMP')"
+        }
+      },
+      required: ["tokenSymbol"]
+    }
+  },
+  {
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
     name: "convertUSDToUSDC",
     description: "Convert USD amount to USDC token units (6 decimals). Use this when you need to calculate USDC amounts for transactions.",
     parameters: {
@@ -133,6 +193,21 @@ export async function executeTools(toolCall: { toolname: string; parameters?: Re
         console.log('Executing sendUSDCTransaction...');
         return await sendUSDCTransaction(parameters as unknown as SendUSDCParams);
         
+<<<<<<< HEAD
+=======
+      case 'swapUSDCForToken':
+        console.log('Executing swapUSDCForToken...');
+        return await swapUSDCForToken(parameters as unknown as SwapUSDCParams);
+        
+      case 'getTokenAddress':
+        console.log('Executing getTokenAddress...');
+        return await getTokenAddress(parameters as { tokenSymbol: string });
+        
+      case 'getMinimumSwapAmounts':
+        console.log('Executing getMinimumSwapAmounts...');
+        return await getMinimumSwapAmounts(parameters as { tokenSymbol?: string });
+        
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
       case 'convertUSDToUSDC':
         console.log('Executing convertUSDToUSDC...');
         return await convertUSDToUSDC(parameters as { usdAmount: number });
@@ -168,6 +243,17 @@ interface SendUSDCParams {
   permission?: FullSpendPermission; // Optional: specific permission to use
 }
 
+<<<<<<< HEAD
+=======
+interface SwapUSDCParams {
+  tokenAddress?: string;
+  amount: string;
+  amountUSD: number;
+  tokenSymbol?: string;
+  userAddress?: string; // Optional: can be provided for authenticated operations
+}
+
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
 async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   console.log('sendUSDCTransaction called with params:', JSON.stringify(params, null, 2));
   
@@ -243,6 +329,326 @@ async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   }
 }
 
+<<<<<<< HEAD
+=======
+async function swapUSDCForToken(params: SwapUSDCParams): Promise<unknown> {
+  console.log('swapUSDCForToken called with params:', JSON.stringify(params, null, 2));
+  
+  try {
+    let { tokenAddress } = params;
+    const { amount, amountUSD, userAddress } = params;
+    let { tokenSymbol } = params;
+
+    console.log('Validating and resolving parameters...');
+
+    // If no tokenAddress provided, try to resolve from tokenSymbol
+    if (!tokenAddress && tokenSymbol) {
+      console.log('Resolving token address from symbol:', tokenSymbol);
+      const tokenLookup = await getTokenAddress({ tokenSymbol });
+      
+      if (tokenLookup && typeof tokenLookup === 'object' && 'success' in tokenLookup && tokenLookup.success) {
+        const tokenData = tokenLookup as unknown as { token: { address: string; symbol: string; name: string } };
+        tokenAddress = tokenData.token.address;
+        tokenSymbol = tokenData.token.symbol; // Use the canonical symbol
+        console.log('Resolved token address:', tokenAddress, 'for symbol:', tokenSymbol);
+      } else {
+        console.error('Failed to resolve token symbol:', tokenSymbol);
+        throw new Error(`Unknown token symbol: ${tokenSymbol}. Supported tokens: ETH, WETH, DAI, COMP, UNI, AAVE`);
+      }
+    }
+
+    // Validate token address
+    if (!tokenAddress || !tokenAddress.startsWith('0x') || tokenAddress.length !== 42) {
+      console.error('Invalid token address:', tokenAddress);
+      throw new Error('Invalid token address. Must provide either a valid token address or a supported token symbol (ETH, WETH, DAI, COMP, UNI, AAVE)');
+    }
+
+    // Validate amount
+    const amountBigInt = BigInt(amount);
+    if (amountBigInt <= 0) {
+      console.error('Invalid amount:', amount);
+      throw new Error('Amount must be greater than 0');
+    }
+
+    console.log('Parameters validated');
+
+    // Check if we have user authentication
+    if (!userAddress) {
+      console.log('No user address provided');
+      return {
+        success: false,
+        requiresAuth: true,
+        message: "USDC swap requires user authentication",
+        instructions: [
+          "Please connect your wallet to the application first"
+        ]
+      };
+    }
+
+    console.log('User address found:', userAddress);
+
+    // Get server wallet for this user
+    const serverWallet = getServerWalletForUser(userAddress);
+    if (!serverWallet?.smartAccount) {
+      console.error('Server wallet not found for user:', userAddress);
+      return {
+        success: false,
+        requiresSetup: true,
+        message: "Server wallet not found. Please refresh and try again."
+      };
+    }
+
+    console.log('Server wallet found:', serverWallet.smartAccount.address);
+
+    // Return transaction parameters for client-side execution
+    const tokenName = tokenSymbol || `token at ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+    const result = {
+      success: false,
+      executeClientSide: true,
+      swapType: true, // Flag to indicate this is a swap operation
+      message: `Preparing to swap $${amountUSD} USDC for ${tokenName}...`,
+      transactionParams: {
+        tokenAddress,
+        amount,
+        amountUSD,
+        tokenSymbol,
+        userAddress,
+        smartAccountAddress: serverWallet.smartAccount.address
+      }
+    };
+
+    console.log('Returning client-side swap execution parameters:', JSON.stringify(result, null, 2));
+    
+    return result;
+
+  } catch (error) {
+    console.error('swapUSDCForToken error:', error);
+    throw new Error(`USDC swap preparation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function getTokenAddress(params: { tokenSymbol: string }): Promise<unknown> {
+  try {
+    const { tokenSymbol } = params;
+    const symbol = tokenSymbol.toUpperCase();
+
+    // Popular token addresses on Base network
+    const tokenAddresses: Record<string, { address: string; name: string; symbol: string }> = {
+      'ETH': {
+        address: '0x4200000000000000000000000000000000000006',
+        name: 'Wrapped Ether',
+        symbol: 'WETH'
+      },
+      'WETH': {
+        address: '0x4200000000000000000000000000000000000006', 
+        name: 'Wrapped Ether',
+        symbol: 'WETH'
+      },
+      'DAI': {
+        address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+        name: 'Dai Stablecoin',
+        symbol: 'DAI'
+      },
+      'COMP': {
+        address: '0x9e1028F5F1D5eDE59748FFceE5532509976840E0',
+        name: 'Compound',
+        symbol: 'COMP'
+      },
+      'UNI': {
+        address: '0x2e668bb88287675e34c8dF82686dfd0b7F0c0383',
+        name: 'Uniswap',
+        symbol: 'UNI'
+      },
+      'AAVE': {
+        address: '0x7c6b91D9Be155A6Db01f749217d76fF02A7227F2',
+        name: 'Aave Token',
+        symbol: 'AAVE'
+      },
+      'USDC': {
+        address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        name: 'USD Coin',
+        symbol: 'USDC'
+      }
+    };
+
+    const token = tokenAddresses[symbol];
+    
+    if (!token) {
+      return {
+        success: false,
+        message: `Token ${symbol} not found in our database. Popular tokens include: ${Object.keys(tokenAddresses).join(', ')}`,
+        availableTokens: Object.values(tokenAddresses)
+      };
+    }
+
+    return {
+      success: true,
+      token: {
+        symbol: token.symbol,
+        name: token.name,
+        address: token.address,
+        network: 'Base'
+      },
+      message: `Found ${token.name} (${token.symbol}) at address ${token.address}`
+    };
+  } catch (error) {
+    console.error('getTokenAddress error:', error);
+    throw new Error(`Failed to get token address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function getMinimumSwapAmounts(params: { tokenSymbol?: string }): Promise<unknown> {
+  try {
+    const { tokenSymbol } = params;
+    
+    // Minimum swap amounts and trading information for Base network
+    const tokenInfo: Record<string, {
+      symbol: string;
+      name: string;
+      address: string;
+      minimumSwapUSD: number;
+      minimumSwapUSDC: string;
+      recommendedMinimumUSD: number;
+      gasEstimateUSD: number;
+      liquidityTier: 'High' | 'Medium' | 'Low';
+      notes: string;
+    }> = {
+      'WETH': {
+        symbol: 'WETH',
+        name: 'Wrapped Ether',
+        address: '0x4200000000000000000000000000000000000006',
+        minimumSwapUSD: 0.01,
+        minimumSwapUSDC: '10000', // 0.01 USDC
+        recommendedMinimumUSD: 1,
+        gasEstimateUSD: 0.02,
+        liquidityTier: 'High',
+        notes: 'Highly liquid, low slippage even for small amounts'
+      },
+      'ETH': {
+        symbol: 'WETH',
+        name: 'Wrapped Ether',
+        address: '0x4200000000000000000000000000000000000006',
+        minimumSwapUSD: 0.01,
+        minimumSwapUSDC: '10000',
+        recommendedMinimumUSD: 1,
+        gasEstimateUSD: 0.02,
+        liquidityTier: 'High',
+        notes: 'Highly liquid, low slippage even for small amounts'
+      },
+      'DAI': {
+        symbol: 'DAI',
+        name: 'Dai Stablecoin', 
+        address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+        minimumSwapUSD: 0.01,
+        minimumSwapUSDC: '10000',
+        recommendedMinimumUSD: 1,
+        gasEstimateUSD: 0.03,
+        liquidityTier: 'High',
+        notes: 'Stablecoin with excellent liquidity'
+      },
+      'COMP': {
+        symbol: 'COMP',
+        name: 'Compound',
+        address: '0x9e1028F5F1D5eDE59748FFceE5532509976840E0',
+        minimumSwapUSD: 0.10,
+        minimumSwapUSDC: '100000',
+        recommendedMinimumUSD: 5,
+        gasEstimateUSD: 0.05,
+        liquidityTier: 'Medium',
+        notes: 'Moderate liquidity, recommend $5+ for better rates'
+      },
+      'UNI': {
+        symbol: 'UNI',
+        name: 'Uniswap',
+        address: '0x2e668bb88287675e34c8dF82686dfd0b7F0c0383',
+        minimumSwapUSD: 0.10,
+        minimumSwapUSDC: '100000',
+        recommendedMinimumUSD: 3,
+        gasEstimateUSD: 0.04,
+        liquidityTier: 'Medium',
+        notes: 'Good liquidity, recommend $3+ for optimal rates'
+      },
+      'AAVE': {
+        symbol: 'AAVE',
+        name: 'Aave Token',
+        address: '0x7c6b91D9Be155A6Db01f749217d76fF02A7227F2',
+        minimumSwapUSD: 0.25,
+        minimumSwapUSDC: '250000',
+        recommendedMinimumUSD: 10,
+        gasEstimateUSD: 0.06,
+        liquidityTier: 'Medium',
+        notes: 'Moderate liquidity, recommend $10+ for best rates'
+      }
+    };
+
+    if (tokenSymbol) {
+      const symbol = tokenSymbol.toUpperCase();
+      const token = tokenInfo[symbol];
+      
+      if (!token) {
+        return {
+          success: false,
+          message: `Token ${symbol} not found. Available tokens: ${Object.keys(tokenInfo).join(', ')}`,
+          availableTokens: Object.keys(tokenInfo)
+        };
+      }
+
+      return {
+        success: true,
+        token: {
+          symbol: token.symbol,
+          name: token.name,
+          address: token.address,
+          minimumSwap: {
+            usd: token.minimumSwapUSD,
+            usdc: token.minimumSwapUSDC,
+            formatted: `$${token.minimumSwapUSD} (${Number(token.minimumSwapUSDC) / 1_000_000} USDC)`
+          },
+          recommended: {
+            usd: token.recommendedMinimumUSD,
+            formatted: `$${token.recommendedMinimumUSD}`,
+            reason: token.notes
+          },
+          trading: {
+            liquidityTier: token.liquidityTier,
+            estimatedGasCost: `$${token.gasEstimateUSD}`,
+            network: 'Base'
+          }
+        },
+        message: `${token.name} (${token.symbol}): Minimum $${token.minimumSwapUSD}, Recommended $${token.recommendedMinimumUSD}+`
+      };
+    }
+
+    // Return all tokens if no specific token requested
+    const allTokens = Object.values(tokenInfo).map(token => ({
+      symbol: token.symbol,
+      name: token.name,
+      minimumUSD: token.minimumSwapUSD,
+      recommendedUSD: token.recommendedMinimumUSD,
+      liquidityTier: token.liquidityTier,
+      notes: token.notes
+    }));
+
+    return {
+      success: true,
+      summary: {
+        network: 'Base',
+        totalSupportedTokens: allTokens.length,
+        lowestMinimum: '$0.01 (WETH, ETH, DAI)',
+        gasEstimate: '$0.02 - $0.06',
+        generalRecommendation: 'For best rates and lowest slippage, use $1+ for high liquidity tokens, $5+ for medium liquidity tokens'
+      },
+      tokens: allTokens,
+      message: 'Minimum swap amounts range from $0.01 to $0.25 depending on token liquidity'
+    };
+
+  } catch (error) {
+    console.error('getMinimumSwapAmounts error:', error);
+    throw new Error(`Failed to get minimum swap amounts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
 function convertUSDToUSDC(params: { usdAmount: number }): unknown {
   try {
     const { usdAmount } = params;

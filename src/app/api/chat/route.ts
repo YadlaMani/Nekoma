@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user address from session
     let userAddress: string | undefined;
     try {
       const session = request.cookies.get("session")?.value;
@@ -80,8 +79,12 @@ export async function POST(request: NextRequest) {
           console.log('Valid tool call structure, executing tool:', toolCall.toolname);
           
           try {
+<<<<<<< HEAD
             // Add user address to tool parameters if not already provided
             if (toolCall.toolname === 'sendUSDCTransaction' && userAddress && !toolCall.parameters?.userAddress) {
+=======
+            if ((toolCall.toolname === 'sendUSDCTransaction' || toolCall.toolname === 'swapUSDCForToken') && userAddress && !toolCall.parameters?.userAddress) {
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
               console.log('Adding user address to tool parameters:', userAddress);
               toolCall.parameters = { ...toolCall.parameters, userAddress };
             }
@@ -92,13 +95,11 @@ export async function POST(request: NextRequest) {
             
             console.log('Tool execution result:', JSON.stringify(toolResult, null, 2));
             
-            // Check if the tool requires client-side execution
             if (toolResult && typeof toolResult === 'object' && 
                 'executeClientSide' in toolResult && toolResult.executeClientSide) {
               
               console.log('Tool requires client-side execution, returning special response');
               
-              // Return the tool result directly so the frontend can handle it
               return NextResponse.json({ 
                 response: (toolResult as unknown as { message: string }).message,
                 toolUsed: {
@@ -107,6 +108,10 @@ export async function POST(request: NextRequest) {
                   result: toolResult
                 },
                 executeClientSide: true,
+<<<<<<< HEAD
+=======
+                swapType: (toolResult as unknown as { swapType?: boolean }).swapType || false,
+>>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
                 transactionParams: (toolResult as unknown as { transactionParams: unknown }).transactionParams
               });
             }
