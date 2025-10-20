@@ -90,7 +90,7 @@ export const useTransferWithPermissions = () => {
             console.log(`Transfer successful on attempt ${attempt}`);
             return {
               success: true,
-              message: `Transaction successful!${attempt > 1 ? ` (succeeded on attempt ${attempt})` : ''}`,
+              message: "Transaction successful!",
               transactionHash: response.data.transferUserOpHash,
               explorerUrl: response.data.explorerUrl || "https://account.base.app/activity",
               details: response.data

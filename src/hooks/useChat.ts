@@ -79,16 +79,16 @@ export function useChat(userAddress?: string): UseChatReturn {
       if (data.executeClientSide && data.transactionParams) {
         console.log('✅ Client-side execution detected!', data.transactionParams);
         
-        // Add a message indicating operation is starting
-        const preparingMessage: ChatMessage = {
+        // Add the initial response without the "Executing..." message
+        const initialMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: data.response + `\n\nExecuting ${data.swapType ? 'swap' : 'transfer'} (with retry logic)...`,
+          content: data.response,
           timestamp: new Date(),
           ...(data.toolUsed && { toolUsed: data.toolUsed }),
         };
         
-        setMessages(prev => [...prev, preparingMessage]);
+        setMessages(prev => [...prev, initialMessage]);
 
         console.log(`🚀 Starting client-side ${data.swapType ? 'swap' : 'transfer'} execution...`);
         

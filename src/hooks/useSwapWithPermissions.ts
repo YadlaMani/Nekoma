@@ -97,7 +97,7 @@ export const useSwapWithPermissions = () => {
             
             return {
               success: true,
-              message: `Swap successful! Exchanged $${amountUSD} USDC for ${tokenName}${attempt > 1 ? ` (succeeded on attempt ${attempt})` : ''}`,
+              message: `Swap successful! Exchanged $${amountUSD} USDC for ${tokenName}`,
               transactionHash: response.data.tradeTransactionHash,
               explorerUrl: response.data.explorerUrl || "https://account.base.app/activity",
               details: response.data

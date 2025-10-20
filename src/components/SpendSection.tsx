@@ -45,6 +45,7 @@ const SpendSection = () => {
   const [dailyLimit, setDailyLimit] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [fetchingPermissions, setFetchingPermissions] = useState(false);
+  const [revokingPermissions, setRevokingPermissions] = useState<Set<string>>(new Set());
 
   const fetchServerWallet = async () => {
     try {
@@ -88,7 +89,7 @@ const SpendSection = () => {
   const formatAllowance = (allowance: string): string => {
     try {
       const amount = Number(allowance) / Math.pow(10, USDC.decimals);
-      return `${amount.toFixed(2)} ${USDC.symbol}`;
+      return `${amount.toFixed(4)} ${USDC.symbol}`;
     } catch {
       return allowance;
     }
@@ -128,6 +129,44 @@ const SpendSection = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRevoke = async (permissionIndex: number) => {
+    if (!userAddress || !spenderAddress) {
+      toast.error("Wallet addresses not loaded yet");
+      return;
+    }
+
+    const permissionKey = `${userAddress}-${spenderAddress}-${permissionIndex}`;
+    setRevokingPermissions(prev => new Set(prev).add(permissionKey));
+
+    try {
+      // Revoke by setting allowance to 0
+      await requestSpendPermission({
+        account: userAddress as `0x${string}`,
+        spender: spenderAddress as `0x${string}`,
+        token: USDC.address as `0x${string}`,
+        chainId: CHAIN_ID,
+        allowance: BigInt(0), // Set to 0 to revoke
+        periodInDays: 1,
+        provider: createBaseAccountSDK({
+          appName: "Coinbase Agent",
+        }).getProvider(),
+      });
+
+      toast.success("Spend permission revoked successfully");
+      await fetchUserPermissions();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to revoke permission"
+      );
+    } finally {
+      setRevokingPermissions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(permissionKey);
+        return newSet;
+      });
     }
   };
 
@@ -238,8 +277,14 @@ const SpendSection = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Button variant="destructive" size="sm" className="bg-red-600/80 hover:bg-red-600">
-                          Revoke
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleRevoke(index)}
+                          disabled={revokingPermissions.has(`${userAddress}-${spenderAddress}-${index}`) || p.status === "Expired" || p.status === "Revoked"}
+                          className="relative overflow-hidden bg-gradient-to-br from-red-600/20 via-red-700/20 to-red-800/20 hover:from-red-500/30 hover:via-red-600/30 hover:to-red-700/30 border-red-400/30 text-red-200 hover:text-red-100 font-medium shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-red-500/20 hover:scale-105 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        >
+                          {revokingPermissions.has(`${userAddress}-${spenderAddress}-${index}`) ? "Revoking..." : "Revoke"}
                         </Button>
                       </TableCell>
                     </TableRow>

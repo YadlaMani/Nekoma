@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Image from "next/image";
 import { SignInWithBaseButton } from "@/components/SignInWithBase";
 import SpendSection from "@/components/SpendSection";
 import { Button } from "@/components/ui/button";
@@ -97,10 +98,14 @@ export default function Home() {
       <header className="bg-gray-900/80 backdrop-blur-sm shadow-lg border-b border-gray-700 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Coinbase Agent
-              </h1>
+            <div className="flex items-center">
+              <Image 
+                src="/nekoma-logo.png" 
+                alt="Nekoma Agent" 
+                width={150} 
+                height={150} 
+                className="rounded-full mr-3"
+              />
             </div>
             {isAuthenticated && (
               <Button 
@@ -118,9 +123,18 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {!isAuthenticated ? (
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Coinbase Agent
-            </h2>
+            <div className="flex justify-center items-center mb-4">
+              <Image 
+                src="/nekoma.jpeg" 
+                alt="Nekoma Agent" 
+                width={60} 
+                height={60} 
+                className="rounded-full mr-4"
+              />
+              <h2 className="text-3xl font-bold text-white">
+                Nekoma Agent
+              </h2>
+            </div>
 
             <div className="flex justify-center">
               <SignInWithBaseButton
