@@ -1,6 +1,4 @@
-import {
-  fetchPermissions,
-} from "@base-org/account/spend-permission";
+import { fetchPermissions } from "@base-org/account/spend-permission";
 import { requestSpendPermission } from "@base-org/account/spend-permission/browser";
 
 import { createBaseAccountSDK } from "@base-org/account";
@@ -26,7 +24,7 @@ export interface FullSpendPermission {
   permissionHash?: string;
   start?: number;
   end?: number;
-  rawPermission?: unknown; // Store the raw permission object from the SDK
+  rawPermission?: unknown;
 }
 
 const CHAIN_ID = 8453;
@@ -157,15 +155,14 @@ export async function getFullUserSpendPermissions(
       token: USDC.address,
       chainId: CHAIN_ID,
       allowance: BigInt(p.permission?.allowance?.toString() || "0"),
-      periodInDays: 1, // Default to daily
+      periodInDays: p.permission.period || 1,
       signature: p.signature,
       permissionHash: p.permissionHash,
       start: p.permission?.start,
       end: p.permission?.end,
-      rawPermission: p, // Store the complete raw permission object
+      rawPermission: p,
     }));
 
-    // Sort by creation time ascending
     return mapped.sort((a, b) => (a.start || 0) - (b.start || 0));
   } catch (error) {
     console.error("Failed to fetch full spend permissions:", error);
