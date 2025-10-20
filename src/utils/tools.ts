@@ -50,8 +50,6 @@ export const availableTools: Tool[] = [
     }
   },
   {
-<<<<<<< HEAD
-=======
     name: "swapUSDCForToken",
     description: "Swap USDC for another token on the Base network. Use this tool when users want to exchange, swap, or buy tokens with USDC. This tool integrates with the user's spend permissions system and will trigger client-side execution for proper permission handling. You can provide either a token address OR a token symbol (like 'ETH', 'WETH', 'DAI') - the tool will automatically resolve symbols to addresses.",
     parameters: {
@@ -109,7 +107,6 @@ export const availableTools: Tool[] = [
     }
   },
   {
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
     name: "convertUSDToUSDC",
     description: "Convert USD amount to USDC token units (6 decimals). Use this when you need to calculate USDC amounts for transactions.",
     parameters: {
@@ -193,8 +190,6 @@ export async function executeTools(toolCall: { toolname: string; parameters?: Re
         console.log('Executing sendUSDCTransaction...');
         return await sendUSDCTransaction(parameters as unknown as SendUSDCParams);
         
-<<<<<<< HEAD
-=======
       case 'swapUSDCForToken':
         console.log('Executing swapUSDCForToken...');
         return await swapUSDCForToken(parameters as unknown as SwapUSDCParams);
@@ -207,7 +202,6 @@ export async function executeTools(toolCall: { toolname: string; parameters?: Re
         console.log('Executing getMinimumSwapAmounts...');
         return await getMinimumSwapAmounts(parameters as { tokenSymbol?: string });
         
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
       case 'convertUSDToUSDC':
         console.log('Executing convertUSDToUSDC...');
         return await convertUSDToUSDC(parameters as { usdAmount: number });
@@ -243,8 +237,6 @@ interface SendUSDCParams {
   permission?: FullSpendPermission; // Optional: specific permission to use
 }
 
-<<<<<<< HEAD
-=======
 interface SwapUSDCParams {
   tokenAddress?: string;
   amount: string;
@@ -253,7 +245,6 @@ interface SwapUSDCParams {
   userAddress?: string; // Optional: can be provided for authenticated operations
 }
 
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
 async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   console.log('sendUSDCTransaction called with params:', JSON.stringify(params, null, 2));
   
@@ -329,8 +320,6 @@ async function sendUSDCTransaction(params: SendUSDCParams): Promise<unknown> {
   }
 }
 
-<<<<<<< HEAD
-=======
 async function swapUSDCForToken(params: SwapUSDCParams): Promise<unknown> {
   console.log('swapUSDCForToken called with params:', JSON.stringify(params, null, 2));
   
@@ -648,7 +637,6 @@ async function getMinimumSwapAmounts(params: { tokenSymbol?: string }): Promise<
   }
 }
 
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
 function convertUSDToUSDC(params: { usdAmount: number }): unknown {
   try {
     const { usdAmount } = params;
@@ -799,11 +787,18 @@ If the user's query doesn't require any tools, respond normally with a conversat
 
 Important: 
 - Only respond with the JSON toolcall format when you need to use a tool
-- DO NOT wrap the JSON in markdown code blocks (no code formatting)
+- DO NOT wrap the JSON in markdown code blocks (no formatting)
 - Return ONLY the raw JSON object, nothing else
 - Make sure the JSON is valid and properly formatted
 - Include all required parameters for the tool
 - If no tools are needed, respond conversationally
+
+For swap operations:
+- When users want to "swap", "exchange", "buy", or "trade" USDC for another token, use swapUSDCForToken
+- You can provide either tokenAddress OR tokenSymbol (the tool will resolve symbols automatically)
+- For transfers/sends to specific addresses, use sendUSDCTransaction
+- Always convert USD amounts to USDC units (multiply by 1,000,000)
+- Do NOT use getTokenAddress before swapUSDCForToken - the swap tool handles token resolution internally
 
 Note: When tools provide data, be contextually aware of what the user specifically asked for:
 - If they ask for "temperature", only mention temperature

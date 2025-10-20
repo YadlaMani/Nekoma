@@ -79,12 +79,7 @@ export async function POST(request: NextRequest) {
           console.log('Valid tool call structure, executing tool:', toolCall.toolname);
           
           try {
-<<<<<<< HEAD
-            // Add user address to tool parameters if not already provided
-            if (toolCall.toolname === 'sendUSDCTransaction' && userAddress && !toolCall.parameters?.userAddress) {
-=======
             if ((toolCall.toolname === 'sendUSDCTransaction' || toolCall.toolname === 'swapUSDCForToken') && userAddress && !toolCall.parameters?.userAddress) {
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
               console.log('Adding user address to tool parameters:', userAddress);
               toolCall.parameters = { ...toolCall.parameters, userAddress };
             }
@@ -108,10 +103,7 @@ export async function POST(request: NextRequest) {
                   result: toolResult
                 },
                 executeClientSide: true,
-<<<<<<< HEAD
-=======
                 swapType: (toolResult as unknown as { swapType?: boolean }).swapType || false,
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
                 transactionParams: (toolResult as unknown as { transactionParams: unknown }).transactionParams
               });
             }
@@ -121,9 +113,18 @@ export async function POST(request: NextRequest) {
 Tool was called: ${toolCall.toolname}
 Tool result: ${JSON.stringify(toolResult, null, 2)}
 
-Based on the tool result above, provide a helpful and natural response to the user's query. 
+Based on the tool result above, if the user's original request requires another tool (like swapping tokens after getting a token address), respond with the appropriate tool call JSON. If no additional tools are needed, provide a helpful and natural response to the user's query.
 
-IMPORTANT: Only answer what the user specifically asked for. Be contextually aware`;
+IMPORTANT: Only answer what the user specifically asked for. Be contextually aware. If you have the information needed to fulfill the user's request with another tool, use it immediately.
+
+REMINDER: For tool calls, respond with ONLY the raw JSON object in this format:
+{
+  "type": "toolcall", 
+  "toolname": "tool_name_here",
+  "parameters": {
+    "param1": "value1"
+  }
+}`;
 
             const finalResponse = await callGeminiAPI({
               prompt: finalPrompt,

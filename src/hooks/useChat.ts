@@ -1,9 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTransferWithPermissions } from './useTransferWithPermissions';
-<<<<<<< HEAD
-=======
 import { useSwapWithPermissions } from './useSwapWithPermissions';
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
+import { addTransactionToHistory } from '@/utils/transactionHistory';
 
 export interface ChatMessage {
   id: string;
@@ -26,16 +24,12 @@ export interface UseChatReturn {
   clearChat: () => void;
 }
 
-export function useChat(): UseChatReturn {
+export function useChat(userAddress?: string): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-<<<<<<< HEAD
-  const { executeTransfer, isExecuting } = useTransferWithPermissions();
-=======
   const { executeTransfer, isExecuting: isTransferExecuting } = useTransferWithPermissions();
   const { executeSwap, isExecuting: isSwapExecuting } = useSwapWithPermissions();
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
@@ -77,18 +71,6 @@ export function useChat(): UseChatReturn {
       const data = await response.json();
       
       console.log('Chat API response:', JSON.stringify(data, null, 2));
-<<<<<<< HEAD
-
-      // Check if client-side execution is required
-      if (data.executeClientSide && data.transactionParams) {
-        console.log('Client-side execution detected!', data.transactionParams);
-        
-        // Add a message indicating transfer is starting
-        const preparingMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.response + "\n\nExecuting transfer (with retry logic)...",
-=======
       console.log('executeClientSide?', data.executeClientSide);
       console.log('transactionParams?', data.transactionParams);
       console.log('swapType?', data.swapType);
@@ -102,26 +84,12 @@ export function useChat(): UseChatReturn {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: data.response + `\n\nExecuting ${data.swapType ? 'swap' : 'transfer'} (with retry logic)...`,
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
           timestamp: new Date(),
           ...(data.toolUsed && { toolUsed: data.toolUsed }),
         };
         
         setMessages(prev => [...prev, preparingMessage]);
 
-<<<<<<< HEAD
-        console.log('🚀 Starting client-side transfer execution...');
-        
-        // Execute the transfer client-side
-        const transferResult = await executeTransfer(data.transactionParams);
-        
-        console.log('📋 Transfer result:', transferResult);
-        
-        // Create the final result message based on success/failure
-        let resultContent = transferResult.message;
-        if (transferResult.success && transferResult.explorerUrl) {
-          resultContent += `\n\nView transaction: ${transferResult.explorerUrl}`;
-=======
         console.log(`🚀 Starting client-side ${data.swapType ? 'swap' : 'transfer'} execution...`);
         
         let operationResult;
@@ -135,6 +103,36 @@ export function useChat(): UseChatReturn {
           }
           
           console.log('📋 Operation result:', operationResult);
+          
+          // Add transaction to history if successful and userAddress is available
+          if (operationResult.success && userAddress) {
+            try {
+              if (data.swapType) {
+                addTransactionToHistory(userAddress, {
+                  type: 'swap',
+                  amount: data.transactionParams.amount,
+                  token: 'USDC',
+                  fromToken: 'USDC',
+                  toToken: data.transactionParams.tokenSymbol || data.transactionParams.tokenAddress || 'Unknown',
+                  txHash: operationResult.transactionHash || 'pending',
+                  status: operationResult.transactionHash ? 'completed' : 'pending',
+                  explorerUrl: operationResult.explorerUrl || 'https://account.base.app/activity',
+                });
+              } else {
+                addTransactionToHistory(userAddress, {
+                  type: 'transfer',
+                  amount: data.transactionParams.amount,
+                  token: 'USDC',
+                  recipient: data.transactionParams.recipient,
+                  txHash: operationResult.transactionHash || 'pending',
+                  status: operationResult.transactionHash ? 'completed' : 'pending',
+                  explorerUrl: operationResult.explorerUrl || 'https://account.base.app/activity',
+                });
+              }
+            } catch (historyError) {
+              console.error('Failed to add transaction to history:', historyError);
+            }
+          }
         } catch (executionError) {
           console.error('❌ Client-side execution failed:', executionError);
           operationResult = {
@@ -147,7 +145,6 @@ export function useChat(): UseChatReturn {
         let resultContent = operationResult.message;
         if (operationResult.success && operationResult.explorerUrl) {
           resultContent += `\n\nView transaction: ${operationResult.explorerUrl}`;
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
         }
         
         const resultMessage: ChatMessage = {
@@ -156,28 +153,20 @@ export function useChat(): UseChatReturn {
           content: resultContent,
           timestamp: new Date(),
           toolUsed: {
-<<<<<<< HEAD
-            name: 'sendUSDCTransaction',
-            result: transferResult
-=======
             name: data.swapType ? 'swapUSDCForToken' : 'sendUSDCTransaction',
             result: operationResult
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
           }
         };
 
         setMessages(prev => [...prev, resultMessage]);
       } else {
         console.log('📝 Regular message response, no client-side execution needed');
-<<<<<<< HEAD
-=======
         console.log('🔍 Response data check:', {
           hasExecuteClientSide: !!data.executeClientSide,
           hasTransactionParams: !!data.transactionParams,
           swapType: data.swapType,
           toolUsed: data.toolUsed?.name
         });
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
         
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -196,7 +185,7 @@ export function useChat(): UseChatReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, executeTransfer, executeSwap]);
+  }, [messages, executeTransfer, executeSwap, userAddress]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
@@ -205,11 +194,7 @@ export function useChat(): UseChatReturn {
 
   return {
     messages,
-<<<<<<< HEAD
-    isLoading: isLoading || isExecuting,
-=======
     isLoading: isLoading || isTransferExecuting || isSwapExecuting,
->>>>>>> 21034bc643d8b42729dc17e1985311756fdb7e01
     error,
     sendMessage,
     clearChat,

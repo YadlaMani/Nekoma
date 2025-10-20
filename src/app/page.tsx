@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useChat } from "@/hooks/useChat";
 import { ChatMessages } from "@/components/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
+import TransactionHistory from "@/components/TransactionHistory";
 import { Trash2, Bot, Wallet } from "lucide-react";
 import { getRawPermissions } from "@/utils/spendUtils";
 import { getPermissionStatus } from "@base-org/account/spend-permission/browser";
@@ -22,7 +23,7 @@ export default function Home() {
   const [userAddress, setUserAddress] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   
-  const { messages, isLoading: isChatLoading, error: chatError, sendMessage, clearChat } = useChat();
+  const { messages, isLoading: isChatLoading, error: chatError, sendMessage, clearChat } = useChat(userAddress);
 
   useEffect(() => {
     checkAuthStatus();
@@ -184,6 +185,11 @@ export default function Home() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+            
+            {/* Transaction History Section */}
+            <div className="mt-8">
+              <TransactionHistory userAddress={userAddress || ""} />
             </div>
           </div>
         )}
