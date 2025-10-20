@@ -26,12 +26,12 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
   };
 
   return (
-    <div className="flex gap-2 p-4 border-t border-white/20 bg-white/5 backdrop-blur-sm">
+    <div className="flex gap-2 p-4 border-t border-white/20 ">
       <Input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message..."
+        placeholder="send 0.1 USDC to 0x..."
         disabled={disabled}
         className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400/50 focus:ring-blue-400/30"
       />

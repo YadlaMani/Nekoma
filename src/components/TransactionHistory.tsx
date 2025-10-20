@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, History, RefreshCw } from "lucide-react";
+import { ExternalLink, History, RefreshCw, Copy, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getTransactionHistory } from "@/utils/transactionHistory";
 
@@ -28,6 +28,7 @@ interface TransactionHistoryProps {
 export default function TransactionHistory({ userAddress }: TransactionHistoryProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedTxHash, setCopiedTxHash] = useState<string | null>(null);
 
   // Load transactions from localStorage on component mount
   useEffect(() => {
@@ -98,8 +99,25 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
     }
   };
 
-  const openExplorer = (explorerUrl: string) => {
+  const openExplorer = () => {
+    // Base chain activity page
+    const explorerUrl = "https://account.base.app/activity";
     window.open(explorerUrl, "_blank");
+  };
+
+  const copyTxHash = async (txHash: string) => {
+    try {
+      await navigator.clipboard.writeText(txHash);
+      setCopiedTxHash(txHash);
+      setTimeout(() => setCopiedTxHash(null), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy transaction hash:', err);
+    }
+  };
+
+  const formatTxHash = (txHash: string) => {
+    if (txHash === 'pending') return 'Pending...';
+    return `${txHash.slice(0, 6)}...${txHash.slice(-4)}`;
   };
 
   if (!userAddress) {
@@ -140,6 +158,7 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
                   <TableHead className="text-gray-300">Type</TableHead>
                   <TableHead className="text-gray-300">Description</TableHead>
                   <TableHead className="text-gray-300">Status</TableHead>
+                  <TableHead className="text-gray-300">Tx Hash</TableHead>
                   <TableHead className="text-gray-300">Time</TableHead>
                   <TableHead className="text-gray-300">Explorer</TableHead>
                 </TableRow>
@@ -170,6 +189,26 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </div>
                     </TableCell>
+                    <TableCell className="text-gray-300">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono">{formatTxHash(tx.txHash)}</span>
+                        {tx.txHash !== 'pending' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyTxHash(tx.txHash)}
+                            className="text-gray-400 hover:text-gray-300 hover:bg-gray-500/10 p-1"
+                            title="Copy transaction hash"
+                          >
+                            {copiedTxHash === tx.txHash ? (
+                              <Check className="h-3 w-3 text-green-400" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-gray-400 text-sm">
                       {formatDistanceToNow(tx.timestamp, { addSuffix: true })}
                     </TableCell>
@@ -177,8 +216,9 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => openExplorer(tx.explorerUrl)}
+                        onClick={openExplorer}
                         className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-1"
+                        title="View activity on Base"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

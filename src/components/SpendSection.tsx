@@ -23,6 +23,7 @@ import {
   SpendPermissionSummary,
 } from "@/utils/spendUtils";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 
 interface ServerWalletResponse {
   address: string;
@@ -131,18 +132,19 @@ const SpendSection = () => {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto mt-6 bg-white/5 backdrop-blur-sm border-white/10">
+    <Card className="w-full max-w-3xl mx-auto bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-white">
           <span>Spend Permissions (USDC Only)</span>
+          
           <Button
             variant="outline"
             size="sm"
             onClick={fetchUserPermissions}
             disabled={fetchingPermissions || !userAddress || !spenderAddress}
-            className="relative overflow-hidden bg-gradient-to-br from-gray-600/20 via-gray-700/20 to-gray-800/20 hover:from-gray-500/30 hover:via-gray-600/30 hover:to-gray-700/30 border-gray-400/30 text-gray-300 hover:text-gray-200 font-medium shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-gray-500/20 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
+            className="border-white/20 text-white hover:bg-white/10"
           >
-            {fetchingPermissions ? "Refreshing..." : "Refresh"}
+            <RefreshCw className={`h-4 w-4 ${fetchingPermissions ? "animate-spin" : ""}`} />
           </Button>
         </CardTitle>
         <p className="text-sm text-gray-300">
@@ -153,7 +155,7 @@ const SpendSection = () => {
       <CardContent>
         <div className="flex gap-4 mb-4">
           <div className="flex-1">
-            <Label className="text-white">Daily Limit (USDC)</Label>
+            <Label className="text-white mb-2">Daily Limit (USDC)</Label>
             <Input
               type="number"
               min={0}

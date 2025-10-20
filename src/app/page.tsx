@@ -133,23 +133,9 @@ export default function Home() {
           <div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
-                <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Wallet className="h-5 w-5" />
-                      Wallet & Transactions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                   
                     <SpendSection />
-                    <div className="pt-4 border-t border-white/20 space-y-4">
-                      <p className="text-sm text-gray-300 text-center">
-                        💬 Use the chat assistant to send USDC transactions with natural language commands like &quot;send 0.1 USDC to 0x...&quot;
-                      </p>
-                      
-                    </div>
-                  </CardContent>
-                </Card>
+                   
               </div>
 
               <div>
