@@ -8,7 +8,7 @@ Nekoma is designed for developers and advanced users who want:
 - Secure, gasless smart contract wallet management
 - AI-driven workflows that bridge on-chain and off-chain actions
   
-[Link to live demo]([https://openai.com](https://drive.google.com/file/d/1iki1-ty_tgFcdFdFqcIKJEhyWW5BfJ3g/view?usp=sharing))
+[Link to live demo](https://drive.google.com/file/d/1iki1-ty_tgFcdFdFqcIKJEhyWW5BfJ3g/view?usp=sharing)
 
 ---
 
