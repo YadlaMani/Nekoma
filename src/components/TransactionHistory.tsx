@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,19 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
   const [isLoading, setIsLoading] = useState(false);
   const [copiedTxHash, setCopiedTxHash] = useState<string | null>(null);
 
+  const loadTransactions = useCallback(() => {
+    if (userAddress) {
+      const txHistory = getTransactionHistory(userAddress);
+      setTransactions(txHistory);
+    }
+  }, [userAddress]);
+
   // Load transactions from localStorage on component mount
   useEffect(() => {
     if (userAddress) {
       loadTransactions();
     }
-  }, [userAddress]);
+  }, [userAddress, loadTransactions]);
 
   // Listen for transaction events
   useEffect(() => {
@@ -54,14 +61,7 @@ export default function TransactionHistory({ userAddress }: TransactionHistoryPr
       window.removeEventListener('transactionAdded', handleTransactionAdded);
       window.removeEventListener('transactionUpdated', handleTransactionUpdated);
     };
-  }, []);
-
-  const loadTransactions = () => {
-    if (userAddress) {
-      const txHistory = getTransactionHistory(userAddress);
-      setTransactions(txHistory);
-    }
-  };
+  }, [loadTransactions]);
 
   const refreshTransactions = () => {
     setIsLoading(true);

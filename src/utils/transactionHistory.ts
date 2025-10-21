@@ -45,7 +45,7 @@ export const getTransactionHistory = (userAddress: string): Transaction[] => {
   const stored = localStorage.getItem(`transactions_${userAddress}`);
   if (!stored) return [];
 
-  return JSON.parse(stored).map((tx: any) => ({
+  return JSON.parse(stored).map((tx: Transaction & { timestamp: string }) => ({
     ...tx,
     timestamp: new Date(tx.timestamp),
   }));

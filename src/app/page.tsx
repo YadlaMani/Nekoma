@@ -11,14 +11,8 @@ import { useChat } from "@/hooks/useChat";
 import { ChatMessages } from "@/components/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import TransactionHistory from "@/components/TransactionHistory";
-import { Trash2, Bot, Wallet } from "lucide-react";
-import { getRawPermissions } from "@/utils/spendUtils";
-import { getPermissionStatus } from "@base-org/account/spend-permission/browser";
-import { prepareSpendCallData } from "@base-org/account/spend-permission/browser";
-interface ServerWalletResponse {
-  address: string;
-  smartAccountAddress?: string;
-}
+import { Trash2, Bot } from "lucide-react";
+
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userAddress, setUserAddress] = useState<string>();
@@ -123,18 +117,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {!isAuthenticated ? (
           <div className="text-center">
-            <div className="flex justify-center items-center mb-4">
-              <Image 
-                src="/nekoma.jpeg" 
-                alt="Nekoma Agent" 
-                width={60} 
-                height={60} 
-                className="rounded-full mr-4"
-              />
-              <h2 className="text-3xl font-bold text-white">
-                Nekoma Agent
-              </h2>
-            </div>
+            
 
             <div className="flex justify-center">
               <SignInWithBaseButton
